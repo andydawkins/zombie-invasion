@@ -15,6 +15,9 @@ running = True
 dt = 0
 board = GameBoard(screen)
 
+# TODO: This file is currently untested, this makes me uncomfortable but I don't want to be testing the internals of pygame
+#       And I definitely don't want to be unittesting UI elements that could get very complicated very quickly
+
 def populate_initial_humans():
     """Places a number of humans on the grid at the beginning of the game."""
     for _ in range(HUMAN_COUNT):

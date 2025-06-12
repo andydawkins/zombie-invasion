@@ -36,13 +36,14 @@ class BaseCharacter(ABC):
                                    This is a pixel coordinate to the center of the grid location
             size (tuple[int]): The size of the grid box the character will occupy
         """
+
+        # TODO: I don't like calculating and rescaling the image each time it's drawn.  It feels like a waste of CPU time.
         # We want to preserve the aspect ratio of the original image
         largest_demension = max(self.image.get_width(), self.image.get_height())
         # Fortunately our location is a Square so we are saved the trouble of worrying about the width and height being
         # different
         new_width = size * (self.image.get_width() / largest_demension)
         new_height = size * (self.image.get_height() / largest_demension)
-
         self.sprite.image = transform.scale(self.image, (new_width, new_height))
 
         # The sprite will be drawn with the location as it's top-left

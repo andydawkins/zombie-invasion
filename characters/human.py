@@ -12,6 +12,7 @@ def image_assets():
     """
     Returns a list of assets for human characters.
     """
+    # TODO: This might work out better as a class method, that would make it easier to implement multiple image choices for other characters
     return glob.glob("assets/character-human*")
 
 

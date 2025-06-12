@@ -12,6 +12,7 @@ class InvalidCoordinateException(Exception):
     be placed there, such as being occupied by another character that doesn't allow it or an object."""
     pass
 
+
 class GameBoard:
     def __init__(self, screen):
         """
@@ -22,6 +23,7 @@ class GameBoard:
         """
         self.screen = screen
 
+        # TODO: I'm thinking that the Grid and the Board are different objects and should be separated
         grid_width = (self.screen.get_width()-20)/GRID_WIDTH
         grid_height = (self.screen.get_height()-20)/GRID_HEIGHT
         self.square_width = min(grid_width, grid_height)
@@ -101,8 +103,7 @@ class GameBoard:
 
     def draw_character(self, character):
         """Draws a single character at its location on the grid."""
-        location = character.location
-        character.draw(self.screen, self.location_to_screen_coordinates(location), self.square_width-4)
+        character.draw(self.screen, self.location_to_screen_coordinates(character.location), self.square_width-4)
 
 
     def add_character(self, character):
@@ -116,6 +117,7 @@ class GameBoard:
 
         If the character was unable to be placed at those co-ordinates then the add_character method will
         raise an InvalidCoordinateException."""
+        # TODO: Currently this doesn't check if the character is already on the board..... do we need to?
         coordinates = character.location
         try:
             self.character_grid[coordinates[0]][coordinates[1]].append(character)
