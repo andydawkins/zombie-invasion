@@ -10,6 +10,7 @@ class BaseCharacter(ABC):
     @abstractmethod
     def __init__(self, location=(0,0)):
         self.location = location
+        self.previous_location = location
         self.sprite = Sprite()
         self._load_image()
 

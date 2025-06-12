@@ -43,6 +43,6 @@ while running:
 
     board.commence_turn()
 
-    dt = clock.tick(60) / 1000  # limits FPS to 60
+    dt = clock.tick(1) / 1000  # limits FPS to 1
 
 pygame.quit()

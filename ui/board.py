@@ -127,6 +127,24 @@ class GameBoard:
 
         return coordinates
 
+    def move_character(self, character):
+        """
+        Move the character to its location on the grid.
+
+        Args:
+            character: The character to move.
+
+        """
+        if character.location[0] < 0 or character.location[1] < 0:
+            raise InvalidCoordinateException
+
+        try:
+            self.character_grid[character.location[0]][character.location[1]].append(character)
+        except IndexError:
+            raise InvalidCoordinateException
+        else:
+            self.character_grid[character.previous_location[0]][character.previous_location[1]].remove(character)
+
     def commence_turn(self):
         """
         This is the main game loop where each turn all characters on the board get to have a 'turn'.

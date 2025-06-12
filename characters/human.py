@@ -1,11 +1,13 @@
 """The Human character class."""
 import glob
 import random
+from copy import copy
 
 from pygame import image
 
 from characters.base import BaseCharacter
 from constants import HUMAN_PACES
+from ui.board import InvalidCoordinateException
 
 
 def image_assets():
@@ -45,6 +47,7 @@ class Human(BaseCharacter):
 
     def move(self):
         """Move the human to a new space."""
+        self.previous_location = copy(self.location)
         direction = self.movement_direction()
         if direction == "N":
             self.location[1] += -HUMAN_PACES
@@ -76,7 +79,11 @@ class Human(BaseCharacter):
         Args:
             board: The board that this character is contained within.
         """
-        pass
+        self.move()
+        try:
+            board.move_character(self)
+        except InvalidCoordinateException:
+            self.location = self.previous_location
 
 
 
