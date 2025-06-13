@@ -1,10 +1,11 @@
 """Tests for the Game Board."""
 from unittest import result
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 
 from characters.human import Human
+from characters.zombie import Zombie
 from ui.board import GameBoard, InvalidCoordinateException
 
 
@@ -181,3 +182,129 @@ def test_move_character_out_of_bounds_negative(mock_screen):
     assert board.character_grid[5][5] == [character]
     # It should exist once in the character_list
     assert board.character_list == [character]
+
+def test_board_initialization():
+    """Test that the board initializes correctly."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    assert len(board.character_grid) == 40  # GRID_WIDTH
+    assert len(board.character_grid[0]) == 20  # GRID_HEIGHT
+    assert len(board.character_list) == 0
+
+
+def test_add_character():
+    """Test adding a character to the board."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    human = Human(location=(5, 5))
+    
+    coordinates = board.add_character(human)
+    assert coordinates == (5, 5)
+    assert human in board.character_list
+    assert human in board.character_grid[5][5]
+
+
+def test_add_character_invalid_location():
+    """Test adding a character to an invalid location."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    human = Human(location=(50, 50))  # Outside grid
+    
+    with pytest.raises(InvalidCoordinateException):
+        board.add_character(human)
+
+
+def test_space_sharing_humans():
+    """Test that humans can share space with other humans."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add first human
+    human1 = Human(location=(5, 5))
+    board.add_character(human1)
+    
+    # Add second human to same location
+    human2 = Human(location=(5, 5))
+    board.add_character(human2)
+    
+    # Both humans should be in the same grid location
+    assert human1 in board.character_grid[5][5]
+    assert human2 in board.character_grid[5][5]
+
+
+def test_space_sharing_zombie_with_human():
+    """Test that zombies cannot share space with humans."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add human
+    human = Human(location=(5, 5))
+    board.add_character(human)
+    
+    # Try to add zombie to same location
+    zombie = Zombie(location=(5, 5))
+    with pytest.raises(InvalidCoordinateException):
+        board.add_character(zombie)
+
+
+def test_space_sharing_zombie_with_zombie():
+    """Test that zombies cannot share space with other zombies."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add first zombie
+    zombie1 = Zombie(location=(5, 5))
+    board.add_character(zombie1)
+    
+    # Try to add second zombie to same location
+    zombie2 = Zombie(location=(5, 5))
+    with pytest.raises(InvalidCoordinateException):
+        board.add_character(zombie2)
+
+
+def test_move_character_space_sharing():
+    """Test that character movement respects space sharing rules."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add two humans
+    human1 = Human(location=(5, 5))
+    human2 = Human(location=(6, 6))
+    board.add_character(human1)
+    board.add_character(human2)
+    
+    # Move human2 to human1's location (should be allowed)
+    human2.location = (5, 5)
+    board.move_character(human2)
+    assert human2 in board.character_grid[5][5]
+    
+    # Add a zombie
+    zombie = Zombie(location=(7, 7))
+    board.add_character(zombie)
+    
+    # Try to move zombie to human's location (should fail)
+    zombie.location = (5, 5)
+    with pytest.raises(InvalidCoordinateException):
+        board.move_character(zombie)

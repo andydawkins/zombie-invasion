@@ -31,6 +31,32 @@ class GameBoard:
         self.character_list = []
         self.center_point = None
 
+    def _check_space_sharing(self, character, location):
+        """
+        Check if a character can share space with existing characters at a location.
+        
+        Args:
+            character: The character attempting to move to the location
+            location: The location to check (x, y coordinates)
+            
+        Returns:
+            bool: True if the character can share the space, False otherwise
+            
+        Raises:
+            InvalidCoordinateException: If the location is invalid
+        """
+        try:
+            existing_characters = self.character_grid[location[0]][location[1]]
+        except IndexError:
+            raise InvalidCoordinateException
+            
+        # Check if the new character can share space with all existing characters
+        for existing_char in existing_characters:
+            if not existing_char.will_share_space(character) or not character.will_share_space(existing_char):
+                return False
+                
+        return True
+
     def draw(self):
         """Draws the game board onto the screen."""
 
@@ -117,8 +143,12 @@ class GameBoard:
 
         If the character was unable to be placed at those co-ordinates then the add_character method will
         raise an InvalidCoordinateException."""
-        # TODO: Currently this doesn't check if the character is already on the board..... do we need to?
         coordinates = character.location
+        
+        # Check if the character can share space with existing characters
+        if not self._check_space_sharing(character, coordinates):
+            raise InvalidCoordinateException
+            
         try:
             self.character_grid[coordinates[0]][coordinates[1]].append(character)
             self.character_list.append(character)
@@ -133,9 +163,15 @@ class GameBoard:
 
         Args:
             character: The character to move.
-
+            
+        Raises:
+            InvalidCoordinateException: If the location is invalid or space sharing is not allowed
         """
         if character.location[0] < 0 or character.location[1] < 0:
+            raise InvalidCoordinateException
+
+        # Check if the character can share space with existing characters at the new location
+        if not self._check_space_sharing(character, character.location):
             raise InvalidCoordinateException
 
         try:

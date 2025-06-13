@@ -10,14 +10,6 @@ from constants import HUMAN_PACES
 from ui.board import InvalidCoordinateException
 
 
-def image_assets():
-    """
-    Returns a list of assets for human characters.
-    """
-    # TODO: This might work out better as a class method, that would make it easier to implement multiple image choices for other characters
-    return glob.glob("assets/character-human*")
-
-
 class Human(BaseCharacter):
     """
     A human character has the following behaviour.
@@ -34,11 +26,31 @@ class Human(BaseCharacter):
         """Initialize a Human character."""
         super(Human, self).__init__(**kwargs)
 
+    def will_share_space(self, other_character):
+        """
+        Determine if this human will share space with another character.
+        
+        Args:
+            other_character: The character attempting to share this space
+            
+        Returns:
+            bool: True if this human will share space with the other character
+        """
+        # Humans can only share space with other humans
+        return isinstance(other_character, Human)
+
+    @classmethod
+    def image_assets(cls):
+        """
+        Returns a list of assets for human characters.
+        """
+        return glob.glob("assets/character-human*")
+
     def _load_image(self):
         """
         Load the image used for the Sprite for this character
         """
-        self.image = image.load(random.choice(image_assets()))
+        self.image = image.load(random.choice(self.image_assets()))
 
     @staticmethod
     def movement_direction():

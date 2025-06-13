@@ -3,16 +3,19 @@ from unittest.mock import Mock
 
 import pytest
 
-from characters.human import Human, image_assets
+from characters.human import Human
+from characters.zombie import Zombie
 
 
 def test_human_instantiation():
     """Check we can instantiate a new instance of a Human."""
     _ = Human()
 
+
 def test_human_location():
     """Check we can set a location on instantiation of a new instance of a Human."""
     assert Human(location=(2,3)).location == (2,3)
+
 
 @pytest.mark.parametrize(
     ("expected"),
@@ -23,7 +26,7 @@ def test_human_location():
 )
 def test_image_assets(expected):
     """Tests function that returns on the potential 'human' image assets available."""
-    assets = image_assets()
+    assets = Human.image_assets()
 
     assert expected in assets
 
@@ -37,9 +40,24 @@ def test_image_assets(expected):
 )
 def test_image_assets_missing(not_expected):
     """Tests function does not return assets for other character types."""
-    assets = image_assets()
+    assets = Human.image_assets()
 
     assert not_expected not in assets
+
+
+def test_human_will_share_space():
+    """Test that humans will share space with other humans but not zombies."""
+    human = Human()
+    other_human = Human()
+    zombie = Zombie()
+    
+    # Humans should share space with other humans
+    assert human.will_share_space(other_human)
+    assert other_human.will_share_space(human)
+    
+    # Humans should not share space with zombies
+    assert not human.will_share_space(zombie)
+    assert not zombie.will_share_space(human)
 
 
 @pytest.mark.parametrize(
