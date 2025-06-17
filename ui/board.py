@@ -259,3 +259,21 @@ class GameBoard:
         # If we get here, the character wasn't found
         raise CharacterNotFoundException(f"Character {character} not found on the board")
 
+    def count_humans(self):
+        """
+        Count the number of humans on the board.
+        
+        Returns:
+            int: The number of humans currently on the board
+        """
+        return sum(1 for char in self.character_list if char.__class__.__name__ == 'Human')
+        
+    def count_zombies(self):
+        """
+        Count the number of zombies on the board.
+        
+        Returns:
+            int: The number of zombies currently on the board
+        """
+        return sum(1 for char in self.character_list if isinstance(char, Zombie))
+

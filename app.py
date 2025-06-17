@@ -54,9 +54,11 @@ def populate_initial_zombies(board):
 populate_initial_humans()
 populate_initial_zombies(board)
 
+# Initialize turn counter
+turn_count = 0
+
 while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
+    # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -64,14 +66,22 @@ while running:
     # fill the screen with a color to wipe away anything from last frame
     screen.fill(BACKGROUND_COLOR)
 
-    # Render the screen surface
+    # Draw the board
     board.draw()
 
-    # flip() the display to put your work on screen
+    # Update the display
     pygame.display.flip()
 
-    board.commence_turn()
+    # Check if all humans are gone
+    if board.count_humans() == 0:
+        print(f"Game Over - All humans have been converted to zombies in {turn_count} turns!")
+        running = False
+    else:
+        # Only process the next turn if the game is still running
+        board.commence_turn()
+        turn_count += 1
 
-    dt = clock.tick(1) / 1000  # limits FPS to 1
+    dt = clock.tick(2) / 1000  # limits FPS to 2
 
+# Quit pygame
 pygame.quit()

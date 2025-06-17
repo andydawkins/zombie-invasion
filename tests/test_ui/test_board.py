@@ -413,3 +413,43 @@ def test_find_character_location():
     non_existent_human = Human(location=(0, 0))
     with pytest.raises(CharacterNotFoundException):
         board.find_character_location(non_existent_human)
+
+def test_count_characters():
+    """Test counting humans and zombies on the board."""
+    # Create a board
+    screen = pygame.Surface((800, 600))
+    board = GameBoard(screen)
+    
+    # Initially there should be no characters
+    assert board.count_humans() == 0
+    assert board.count_zombies() == 0
+    
+    # Add some humans
+    human1 = Human(location=(0, 0))
+    human2 = Human(location=(1, 1))
+    board.add_character(human1)
+    board.add_character(human2)
+    
+    # Check human count
+    assert board.count_humans() == 2
+    assert board.count_zombies() == 0
+    
+    # Add some zombies
+    zombie1 = Zombie(location=(2, 2))
+    zombie2 = Zombie(location=(3, 3))
+    zombie3 = Zombie(location=(4, 4))
+    board.add_character(zombie1)
+    board.add_character(zombie2)
+    board.add_character(zombie3)
+    
+    # Check both counts
+    assert board.count_humans() == 2
+    assert board.count_zombies() == 3
+    
+    # Convert a human to a zombie
+    human1.location = zombie1.location
+    board.move_character(human1)
+    
+    # Check updated counts
+    assert board.count_humans() == 1
+    assert board.count_zombies() == 4
