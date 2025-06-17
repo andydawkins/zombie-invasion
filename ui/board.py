@@ -4,7 +4,7 @@ from copy import copy
 
 from constants import GRID_WIDTH, GRID_HEIGHT, GRID_COLOR
 from characters.zombie import Zombie
-from exceptions import InvalidCoordinateException
+from exceptions import InvalidCoordinateException, CharacterNotFoundException
 
 
 class GameBoard:
@@ -68,7 +68,8 @@ class GameBoard:
         # Remove the human from the board using its previous location
         # This is important because the human's location has already been updated
         # to where it's trying to move to
-        self.character_grid[human.previous_location[0]][human.previous_location[1]].remove(human)
+        human_location = self.find_character_location(human)
+        self.character_grid[human_location[0]][human_location[1]].remove(human)
         self.character_list.remove(human)
         
         # Add the zombie to the board at the new location
@@ -212,18 +213,19 @@ class GameBoard:
                 for existing_char in destination_characters:
                     if existing_char.__class__.__name__ == 'Human':
                         # Convert human to zombie at the destination location
-                        self._convert_human_to_zombie(existing_char, character.location)
+                        self._convert_human_to_zombie(existing_char)
             elif character.__class__.__name__ == 'Human':
                 # If moving character is a human, check for zombies at destination
                 for existing_char in destination_characters:
                     if isinstance(existing_char, Zombie):
                         # Convert human to zombie
-                        self._convert_human_to_zombie(character)
+                        self._convert_human_to_zombie(character, existing_char.location)
                         return  # The original character is now a zombie, so we're done
             
             # Finally, move the character
+            character_location = self.find_character_location(character)
+            self.character_grid[character_location[0]][character_location[1]].remove(character)
             self.character_grid[character.location[0]][character.location[1]].append(character)
-            self.character_grid[character.previous_location[0]][character.previous_location[1]].remove(character)
             
         except IndexError:
             raise InvalidCoordinateException
@@ -234,4 +236,26 @@ class GameBoard:
         """
         for character in self.character_list:
             character.commence_turn(self)
+
+    def find_character_location(self, character):
+        """
+        Find the location of a character in the character grid.
+        
+        Args:
+            character: The character to find
+            
+        Returns:
+            tuple: The (x, y) coordinates where the character is found
+            
+        Raises:
+            CharacterNotFoundException: If the character is not found on the board
+        """
+        # Search through the character grid
+        for x in range(GRID_WIDTH):
+            for y in range(GRID_HEIGHT):
+                if character in self.character_grid[x][y]:
+                    return (x, y)
+                    
+        # If we get here, the character wasn't found
+        raise CharacterNotFoundException(f"Character {character} not found on the board")
 

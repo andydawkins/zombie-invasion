@@ -3,11 +3,12 @@ from unittest import result
 from unittest.mock import Mock, patch, MagicMock
 
 import pytest
+import pygame
 
 from characters.human import Human
 from characters.zombie import Zombie
 from ui.board import GameBoard
-from exceptions import InvalidCoordinateException
+from exceptions import InvalidCoordinateException, CharacterNotFoundException
 
 
 @pytest.fixture
@@ -391,3 +392,24 @@ def test_multiple_humans_convert_to_zombies():
     assert human2 not in board.character_list
     assert len(board.character_grid[5][5]) == 3  # All three zombies should be there
     assert all(isinstance(char, Zombie) for char in board.character_grid[5][5])
+
+def test_find_character_location():
+    """Test finding a character's location on the board."""
+    # Create a board and some characters
+    screen = pygame.Surface((800, 600))
+    board = GameBoard(screen)
+    human = Human(location=(2, 3))
+    zombie = Zombie(location=(4, 5))
+    
+    # Add characters to the board
+    board.add_character(human)
+    board.add_character(zombie)
+    
+    # Test finding existing characters
+    assert board.find_character_location(human) == (2, 3)
+    assert board.find_character_location(zombie) == (4, 5)
+    
+    # Test finding a character that's not on the board
+    non_existent_human = Human(location=(0, 0))
+    with pytest.raises(CharacterNotFoundException):
+        board.find_character_location(non_existent_human)

@@ -7,6 +7,7 @@ import random
 from characters.human import Human
 from characters.zombie import Zombie
 from constants import HUMAN_COUNT, ZOMBIE_COUNT, GRID_WIDTH, GRID_HEIGHT, BACKGROUND_COLOR
+from exceptions import InvalidCoordinateException
 from ui.board import GameBoard
 
 # pygame setup
@@ -41,7 +42,7 @@ def populate_initial_zombies(board):
                 y = random.randint(0, GRID_HEIGHT - 1)
                 
                 # Create and add zombie at the random location
-                zombie = Zombie(location=(x, y))
+                zombie = Zombie(location=[x, y])
                 board.add_character(zombie, is_initial_placement=True)
                 break
             except InvalidCoordinateException:

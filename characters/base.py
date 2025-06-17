@@ -8,7 +8,7 @@ from pygame.sprite import Sprite
 class BaseCharacter(ABC):
     """Abstract base class for characters."""
     @abstractmethod
-    def __init__(self, location=(0,0)):
+    def __init__(self, location=[0,0]):
         self.location = location
         self.previous_location = location
         self.sprite = Sprite()
