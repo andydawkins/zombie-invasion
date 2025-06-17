@@ -46,18 +46,18 @@ def test_image_assets_missing(not_expected):
 
 
 def test_human_will_share_space():
-    """Test that humans will share space with other humans but not zombies."""
-    human = Human()
-    other_human = Human()
-    zombie = Zombie()
+    """Test that humans can share space with other humans and zombies."""
+    human1 = Human(location=(0, 0))
+    human2 = Human(location=(1, 1))
+    zombie = Zombie(location=(2, 2))
     
-    # Humans should share space with other humans
-    assert human.will_share_space(other_human)
-    assert other_human.will_share_space(human)
+    # Humans can share space with other humans
+    assert human1.will_share_space(human2) is True
+    assert human2.will_share_space(human1) is True
     
-    # Humans should not share space with zombies
-    assert not human.will_share_space(zombie)
-    assert not zombie.will_share_space(human)
+    # Humans can share space with zombies (for conversion purposes)
+    assert human1.will_share_space(zombie) is True
+    assert human2.will_share_space(zombie) is True
 
 
 @pytest.mark.parametrize(

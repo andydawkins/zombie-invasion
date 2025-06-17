@@ -28,16 +28,17 @@ class Human(BaseCharacter):
 
     def will_share_space(self, other_character):
         """
-        Determine if this human will share space with another character.
+        Check if this human will share space with another character.
+        Humans can share space with other humans and zombies (for conversion purposes).
         
         Args:
-            other_character: The character attempting to share this space
+            other_character: The other character to check space sharing with
             
         Returns:
             bool: True if this human will share space with the other character
         """
-        # Humans can only share space with other humans
-        return isinstance(other_character, Human)
+        # Humans can share space with other humans and zombies
+        return other_character.__class__.__name__ in ['Human', 'Zombie']
 
     @classmethod
     def image_assets(cls):

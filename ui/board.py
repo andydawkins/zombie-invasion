@@ -1,16 +1,10 @@
 import pygame.draw
 from pygame.examples.music_drop_fade import starting_pos
+from copy import copy
 
 from constants import GRID_WIDTH, GRID_HEIGHT, GRID_COLOR
-
-
-class InvalidCoordinateException(Exception):
-    """
-    Raised when a characters coordinates are invalid.
-
-    This can be because it's not on the board or because there are other reasons why the character cannot
-    be placed there, such as being occupied by another character that doesn't allow it or an object."""
-    pass
+from characters.zombie import Zombie
+from exceptions import InvalidCoordinateException
 
 
 class GameBoard:
@@ -56,6 +50,32 @@ class GameBoard:
                 return False
                 
         return True
+
+    def _convert_human_to_zombie(self, human, location=None):
+        """
+        Convert a human character to a zombie character.
+        
+        Args:
+            human: The human character to convert
+            location: Optional location for the new zombie. If None, uses human's location.
+            
+        Returns:
+            Zombie: The newly created zombie character
+        """
+        # Create a new zombie at the specified location or human's location
+        zombie = Zombie(location=location if location is not None else human.location)
+        
+        # Remove the human from the board using its previous location
+        # This is important because the human's location has already been updated
+        # to where it's trying to move to
+        self.character_grid[human.previous_location[0]][human.previous_location[1]].remove(human)
+        self.character_list.remove(human)
+        
+        # Add the zombie to the board at the new location
+        self.character_grid[zombie.location[0]][zombie.location[1]].append(zombie)
+        self.character_list.append(zombie)
+        
+        return zombie
 
     def draw(self):
         """Draws the game board onto the screen."""
@@ -132,30 +152,37 @@ class GameBoard:
         character.draw(self.screen, self.location_to_screen_coordinates(character.location), self.square_width-4)
 
 
-    def add_character(self, character):
+    def add_character(self, character, is_initial_placement=False):
         """
-        Adds a character to the game board.
+        Add a character to the board.
 
-        When placing a character on the game board the add_character method will echo back
-        the co-ordinates that the character has been placed, this might be different to the requested
-        co-ordinates.
-        There may be reasons why the character has to be placed somewhere else.
-
-        If the character was unable to be placed at those co-ordinates then the add_character method will
-        raise an InvalidCoordinateException."""
-        coordinates = character.location
-        
-        # Check if the character can share space with existing characters
-        if not self._check_space_sharing(character, coordinates):
-            raise InvalidCoordinateException
+        Args:
+            character: The character to add.
+            is_initial_placement: Whether this is initial placement (True) or movement/conversion (False)
             
+        Raises:
+            InvalidCoordinateException: If the location is invalid or space sharing is not allowed
+        """
+        if character.location[0] < 0 or character.location[1] < 0:
+            raise InvalidCoordinateException
+
         try:
-            self.character_grid[coordinates[0]][coordinates[1]].append(character)
+            # For initial placement, only zombies cannot share spaces
+            if is_initial_placement and isinstance(character, Zombie):
+                if self.character_grid[character.location[0]][character.location[1]]:
+                    raise InvalidCoordinateException
+            else:
+                # For movement/conversion or initial human placement, check space sharing rules
+                if not self._check_space_sharing(character, character.location):
+                    raise InvalidCoordinateException
+
+            self.character_grid[character.location[0]][character.location[1]].append(character)
             self.character_list.append(character)
+            
         except IndexError:
             raise InvalidCoordinateException
-
-        return coordinates
+        
+        return character.location
 
     def move_character(self, character):
         """
@@ -170,16 +197,36 @@ class GameBoard:
         if character.location[0] < 0 or character.location[1] < 0:
             raise InvalidCoordinateException
 
-        # Check if the character can share space with existing characters at the new location
-        if not self._check_space_sharing(character, character.location):
-            raise InvalidCoordinateException
-
         try:
+            # Get characters at the destination location
+            destination_characters = copy(self.character_grid[character.location[0]][character.location[1]])
+            
+            # First check if the character can share the space with existing characters
+            # This needs to happen before any conversions
+            if not self._check_space_sharing(character, character.location):
+                raise InvalidCoordinateException
+            
+            # Then handle any human-to-zombie conversions
+            if isinstance(character, Zombie):
+                # If moving character is a zombie, check for humans at destination
+                for existing_char in destination_characters:
+                    if existing_char.__class__.__name__ == 'Human':
+                        # Convert human to zombie at the destination location
+                        self._convert_human_to_zombie(existing_char, character.location)
+            elif character.__class__.__name__ == 'Human':
+                # If moving character is a human, check for zombies at destination
+                for existing_char in destination_characters:
+                    if isinstance(existing_char, Zombie):
+                        # Convert human to zombie
+                        self._convert_human_to_zombie(character)
+                        return  # The original character is now a zombie, so we're done
+            
+            # Finally, move the character
             self.character_grid[character.location[0]][character.location[1]].append(character)
+            self.character_grid[character.previous_location[0]][character.previous_location[1]].remove(character)
+            
         except IndexError:
             raise InvalidCoordinateException
-        else:
-            self.character_grid[character.previous_location[0]][character.previous_location[1]].remove(character)
 
     def commence_turn(self):
         """

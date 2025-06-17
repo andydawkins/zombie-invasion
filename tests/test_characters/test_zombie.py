@@ -54,9 +54,19 @@ def test_zombie_will_share_space():
     assert not zombie.will_share_space(other_zombie)
     assert not other_zombie.will_share_space(zombie)
     
-    # Zombies should not share space with humans
-    assert not zombie.will_share_space(human)
-    assert not human.will_share_space(zombie)
+    # Zombies will share space with humans
+    assert zombie.will_share_space(human)
+    assert human.will_share_space(zombie)
+
+
+def test_zombie_will_not_share_space_with_zombie():
+    """Test that zombies cannot share space with other zombies."""
+    zombie1 = Zombie(location=(0, 0))
+    zombie2 = Zombie(location=(1, 1))
+    
+    # Zombies cannot share space with other zombies
+    assert zombie1.will_share_space(zombie2) is False
+    assert zombie2.will_share_space(zombie1) is False
 
 
 def test_find_nearest_human():
@@ -69,7 +79,7 @@ def test_find_nearest_human():
     human2 = Human(location=[10, 15])  # 5 units away
     human3 = Human(location=[8, 8])    # ~2.8 units away
     
-    board.characters = [human1, human2, human3]
+    board.character_list = [human1, human2, human3]
     
     nearest = zombie._find_nearest_human(board)
     assert nearest == [12, 10]  # human1 should be nearest
@@ -82,7 +92,7 @@ def test_movement_direction_towards_human():
     
     # Place a human to the northeast
     human = Human(location=[12, 8])
-    board.characters = [human]
+    board.character_list = [human]
     
     # Zombie should move east (horizontal distance is greater)
     assert zombie.movement_direction(board) == "E"
@@ -120,10 +130,10 @@ def test_movement_direction_no_humans():
 @pytest.mark.parametrize(
     ("human_location", "expected_direction", "expected_destination"),
     [
-        [[12, 10], "E", [11, 10]],  # Move east towards human
-        [[8, 10], "W", [9, 10]],    # Move west towards human
-        [[10, 8], "N", [10, 9]],    # Move north towards human
-        [[10, 12], "S", [10, 11]],  # Move south towards human
+        [[13, 10], "E", [11, 10]],  # Move east towards human
+        [[7, 10], "W", [9, 10]],    # Move west towards human
+        [[10, 7], "N", [10, 9]],    # Move north towards human
+        [[10, 13], "S", [10, 11]],  # Move south towards human
     ]
 )
 def test_zombie_movement_towards_human(human_location, expected_direction, expected_destination):
@@ -133,7 +143,7 @@ def test_zombie_movement_towards_human(human_location, expected_direction, expec
     
     # Place a human at the specified location
     human = Human(location=human_location)
-    board.characters = [human]
+    board.character_list = [human]
     
     # Move the zombie
     zombie.move(board)

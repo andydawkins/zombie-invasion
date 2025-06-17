@@ -8,7 +8,7 @@ from pygame import image
 
 from characters.base import BaseCharacter
 from constants import ZOMBIE_PACES
-from ui.board import InvalidCoordinateException
+from exceptions import InvalidCoordinateException
 
 
 class Zombie(BaseCharacter):
@@ -28,16 +28,17 @@ class Zombie(BaseCharacter):
 
     def will_share_space(self, other_character):
         """
-        Determine if this zombie will share space with another character.
+        Check if this zombie will share space with another character.
+        Zombies can only share space with humans (for conversion purposes).
         
         Args:
-            other_character: The character attempting to share this space
+            other_character: The other character to check space sharing with
             
         Returns:
             bool: True if this zombie will share space with the other character
         """
-        # Zombies cannot share space with any other characters
-        return False
+        # Zombies can only share space with humans (for conversion)
+        return other_character.__class__.__name__ == 'Human'
 
     @classmethod
     def image_assets(cls):

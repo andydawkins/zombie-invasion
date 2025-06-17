@@ -2,6 +2,7 @@
 from random import randint
 
 import pygame
+import random
 
 from characters.human import Human
 from characters.zombie import Zombie
@@ -25,22 +26,32 @@ def populate_initial_humans():
         board.add_character(Human(location=[randint(0, GRID_WIDTH-1), randint(0, GRID_HEIGHT-1)]))
 
 
-def populate_initial_zombies():
-    """Places a number of zombies on the grid at the beginning of the game."""
+def populate_initial_zombies(board):
+    """
+    Place a number of zombies on the grid at the start of the game.
+    
+    Args:
+        board: The game board to populate with zombies
+    """
     for _ in range(ZOMBIE_COUNT):
-        # Keep trying to place zombies until we find a valid space
         while True:
             try:
-                board.add_character(Zombie(location=[randint(0, GRID_WIDTH-1), randint(0, GRID_HEIGHT-1)]))
+                # Generate random coordinates
+                x = random.randint(0, GRID_WIDTH - 1)
+                y = random.randint(0, GRID_HEIGHT - 1)
+                
+                # Create and add zombie at the random location
+                zombie = Zombie(location=(x, y))
+                board.add_character(zombie, is_initial_placement=True)
                 break
             except InvalidCoordinateException:
-                # If we can't place the zombie (due to space sharing rules), try again
+                # If the space is occupied, try again
                 continue
 
 
 # Populate the board with initial characters
 populate_initial_humans()
-populate_initial_zombies()
+populate_initial_zombies(board)
 
 while running:
     # poll for events

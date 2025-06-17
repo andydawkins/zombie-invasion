@@ -6,7 +6,8 @@ import pytest
 
 from characters.human import Human
 from characters.zombie import Zombie
-from ui.board import GameBoard, InvalidCoordinateException
+from ui.board import GameBoard
+from exceptions import InvalidCoordinateException
 
 
 @pytest.fixture
@@ -245,44 +246,10 @@ def test_space_sharing_humans():
     assert human2 in board.character_grid[5][5]
 
 
-def test_space_sharing_zombie_with_human():
-    """Test that zombies cannot share space with humans."""
-    screen = MagicMock()
-    screen.get_width.return_value = 800
-    screen.get_height.return_value = 600
+def test_move_character_space_sharing_allowed():
+    """Test that character movement respects space sharing rules.
     
-    board = GameBoard(screen)
-    
-    # Add human
-    human = Human(location=(5, 5))
-    board.add_character(human)
-    
-    # Try to add zombie to same location
-    zombie = Zombie(location=(5, 5))
-    with pytest.raises(InvalidCoordinateException):
-        board.add_character(zombie)
-
-
-def test_space_sharing_zombie_with_zombie():
-    """Test that zombies cannot share space with other zombies."""
-    screen = MagicMock()
-    screen.get_width.return_value = 800
-    screen.get_height.return_value = 600
-    
-    board = GameBoard(screen)
-    
-    # Add first zombie
-    zombie1 = Zombie(location=(5, 5))
-    board.add_character(zombie1)
-    
-    # Try to add second zombie to same location
-    zombie2 = Zombie(location=(5, 5))
-    with pytest.raises(InvalidCoordinateException):
-        board.add_character(zombie2)
-
-
-def test_move_character_space_sharing():
-    """Test that character movement respects space sharing rules."""
+    Humans are allowed to share spaces with other humans"""
     screen = MagicMock()
     screen.get_width.return_value = 800
     screen.get_height.return_value = 600
@@ -299,12 +266,128 @@ def test_move_character_space_sharing():
     human2.location = (5, 5)
     board.move_character(human2)
     assert human2 in board.character_grid[5][5]
+
+
+
+def test_move_character_space_sharing_not_allowed():
+    """Test that character movement respects space sharing rules.
     
-    # Add a zombie
-    zombie = Zombie(location=(7, 7))
+    Zombies are not allowed to share spaces with other zombies"""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+   
+    # Add two zombies
+    zombie1 = Zombie(location=(7, 7))
+    zombie2 = Zombie(location=(8, 8))
+    board.add_character(zombie1)
+    board.add_character(zombie2)
+    
+    # Try to move zombie1 to zombie2's location (should fail)
+    zombie1.location = (8, 8)
+    with pytest.raises(InvalidCoordinateException):
+        board.move_character(zombie1)
+
+def test_convert_human_to_zombie():
+    """Test the human to zombie conversion helper method."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add a human
+    human = Human(location=(5, 5))
+    board.add_character(human)
+    
+    # Convert the human to a zombie
+    zombie = board._convert_human_to_zombie(human)
+    
+    # Check that the human is removed
+    assert human not in board.character_list
+    assert human not in board.character_grid[5][5]
+    
+    # Check that the zombie is added
+    assert zombie in board.character_list
+    assert zombie in board.character_grid[5][5]
+    assert isinstance(zombie, Zombie)
+    assert zombie.location == (5, 5)
+
+
+def test_zombie_moves_to_human():
+    """Test that a zombie moving to a human's space converts the human."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add a human and a zombie
+    human = Human(location=(5, 5))
+    zombie = Zombie(location=(6, 6))
+    board.add_character(human)
     board.add_character(zombie)
     
-    # Try to move zombie to human's location (should fail)
+    # Move zombie to human's location
     zombie.location = (5, 5)
-    with pytest.raises(InvalidCoordinateException):
-        board.move_character(zombie)
+    board.move_character(zombie)
+    
+    # Check that the human is converted to a zombie
+    assert human not in board.character_list
+    assert human not in board.character_grid[5][5]
+    assert len(board.character_grid[5][5]) == 2  # Both zombies should be there
+    assert all(isinstance(char, Zombie) for char in board.character_grid[5][5])
+
+
+def test_human_moves_to_zombie():
+    """Test that a human moving to a zombie's space gets converted."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add a human and a zombie
+    human = Human(location=(5, 5))
+    zombie = Zombie(location=(6, 6))
+    board.add_character(human)
+    board.add_character(zombie)
+    
+    # Move human to zombie's location
+    human.location = (6, 6)
+    board.move_character(human)
+    
+    # Check that the human is converted to a zombie
+    assert human not in board.character_list
+    assert human not in board.character_grid[6][6]
+    assert len(board.character_grid[6][6]) == 2  # Both zombies should be there
+    assert all(isinstance(char, Zombie) for char in board.character_grid[6][6])
+
+
+def test_multiple_humans_convert_to_zombies():
+    """Test that multiple humans can be converted to zombies in one move."""
+    screen = MagicMock()
+    screen.get_width.return_value = 800
+    screen.get_height.return_value = 600
+    
+    board = GameBoard(screen)
+    
+    # Add multiple humans and a zombie
+    human1 = Human(location=(5, 5))
+    human2 = Human(location=(5, 5))
+    zombie = Zombie(location=(6, 6))
+    board.add_character(human1)
+    board.add_character(human2)
+    board.add_character(zombie)
+    
+    # Move zombie to humans' location
+    zombie.location = (5, 5)
+    board.move_character(zombie)
+    
+    # Check that both humans are converted to zombies
+    assert human1 not in board.character_list
+    assert human2 not in board.character_list
+    assert len(board.character_grid[5][5]) == 3  # All three zombies should be there
+    assert all(isinstance(char, Zombie) for char in board.character_grid[5][5])
